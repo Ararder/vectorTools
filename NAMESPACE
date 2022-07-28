@@ -3,5 +3,7 @@
 export("%>%")
 export(crime3)
 export(crime3_con)
-export(get_icd_code)
+export(crime3_first_unique_diagnosis)
+export(crime3_icd)
+export(first_date)
 importFrom(magrittr,"%>%")

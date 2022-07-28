@@ -1,4 +1,6 @@
-utils::globalVariables(c("con", "name", ".data"))
+utils::globalVariables(c("con", "name", ".data",
+                         "%like%", "DATUM", "DIA", "LOPNR", "all_of", "where"))
+
 #' Establish connection to crime3
 #'
 #' @return An odbc connection object
@@ -68,25 +70,34 @@ crime3_icd <- function(code, specialist=TRUE) {
 }
 
 
+#' Finds the first date for each unique diagnosis
+#'
+#' @param tbl a tibble from crime3_icd()
+#' @param icd_digits How many digits of the icd code to consider as a unique diagnosis.
+#' 3 digits would cut F323A at F32, while four digits would allow for distinction between
+#' F323 and F322
+#'
+#' @return a tibble
+#' @export
+#'
+#' @examples \dontrun{
+#' mdd <- crime3_icd(c("F32", "F33"))
+#' first_dia <- crime3_first_unique_diagnosis(mdd, 3)
+#' }
+crime3_first_unique_diagnosis <- function(tbl,icd_digits=3) {
+  stopifnot(c("LOPNR", "DATUM", "DIA") %in% colnames(tbl))
+  stopifnot(is.numeric(tbl$LOPNR), is.character(tbl$DATUM), is.character(tbl$DIA))
+  tbl %>%
+    dplyr::select(all_of(c("LOPNR", "DATUM", "DIA"))) %>%
+    dplyr::group_by(LOPNR) %>%
+    dplyr::mutate(DIA = stringr::str_sub(DIA, 1, {{ icd_digits }} )) %>%
+    dplyr::group_by(LOPNR, DIA) %>%
+    dplyr::filter(DATUM == min(DATUM)) %>%
+    dplyr::distinct() %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(DATUM = lubridate::ymd(DATUM)) %>%
+    tidyr::pivot_wider(names_from = DIA, values_from = DATUM)
 
-# unique_diagnosis <- function(tbl,icd_digits=3) {
-#   stopifnot(c("LOPNR", "DATUM", "DIA") %in% colnames(tbl))
-#   stopifnot(is.numeric(tbl$LOPNR), is.character(tbl$DATUM), is.character(tbl$DIA))
-#   tbl %>%
-#     dplyr::select(all_of(c("LOPNR", "DATUM", "DIA"))) %>%
-#     dplyr::group_by(LOPNR) %>%
-#     dplyr::mutate(short_dia = stringr::str_sub(DIA, 1, {{ icd_digits }} )) %>%
-#     dplyr::group_by(LOPNR, short_dia) %>%
-#     dplyr::filter(DATUM == min(DATUM)) %>%
-#     dplyr::select(-DIA) %>%
-#     dplyr::distinct() %>%
-#     tidyr::pivot_wider(names_from = short_dia, values_from = DATUM) %>%
-#     dplyr::ungroup() %>%
-#     dplyr::mutate(DATUM = lubridate::ymd(DATUM)) %>%
-#
-# }
-# kk <- unique_diagnosis(mdd,4)
-#
-#
-# kk %>%
-#   mutate(first = do.call(pmin, c(select(., where(is.Date)), list(na.rm=TRUE))))
+}
+
+
