@@ -9,8 +9,7 @@ utils::globalVariables(c("con", "name", ".data",
 #' @examples
 #' con <- crime3_con()
 crime3_con <- function(){
-  names <- dplyr::tibble(odbc::odbcListDataSources()) %>% dplyr::pull(name)
-  stopifnot("KOSMOS" %in% names)
+
 
   DBI::dbConnect(odbc::odbc(), "kosmos", database = "MGRCRIME3",
                    schema = "MGRCRIME3")
