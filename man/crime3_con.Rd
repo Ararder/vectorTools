@@ -13,5 +13,7 @@ An odbc connection object
 Establish connection to crime3
 }
 \examples{
+\dontrun{
 con <- crime3_con()
+}
 }

@@ -6,8 +6,9 @@ utils::globalVariables(c("con", "name", ".data",
 #' @return An odbc connection object
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
 #' con <- crime3_con()
+#' }
 crime3_con <- function(){
 
 
