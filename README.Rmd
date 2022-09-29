@@ -15,22 +15,59 @@ knitr::opts_chunk$set(
 
 # vectorTools
 
-<!-- badges: start -->
-<!-- badges: end -->
 
-The goal of vectorTools is to ...
+The goal of vectorTools is to provide a common set of functions used to analyze data on vector, a local compute server at the institute for medical epidemiology and biostatistics.
 
 ## Installation
 
 You can install the development version of vectorTools like so:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+library(devtools)
+install_github("ararder/vectorTools")
 ```
 
-## Example
+## UK Biobank
+On vector, phenotype for UKB is stored in three separate files. The files are
+very large, so it is not feasible to read the entire dataset in, and then drop the variables you dont
+want. For this, there is the ukb_extract() function, which takes as argument a vector of fields to extract.
+The function will first see if the field exists in each of the datasets, and then extract it if it exists.
 
-This is a basic example which shows you how to solve a common problem:
+
+```{r, eval = FALSE}
+library(tidyverse)
+library(vectorTools)
+library(data.table)
+
+tt <- ukb_extract("f.34\\.")
+cools <- fread("/nfs/AGE/UKB/data/180524/r/ukb22140.tab", nrows = 0)
+
+
+  
+tibble(x=c(colnames(cools), c("f.20.0.0", "f.20.0.4", "f.20"))) %>% 
+  filter(str_detect(x, "f.20$"))
+  filter(str_detect(x, "f.20\\."))
+
+
+```
+
+The matching against the field name only check if the provided string matches any of the column names.
+Therefore, ukb_extract("f.32") would also match any columns starting with
+"f.32*
+```{r}
+library(tidyverse)
+ex <- tibble(string=c("f.32", "f.322", "f.3220.0.1", "f.20005.0.0"))
+
+filter(ex, str_detect(string, "f.32^"))
+
+```
+
+
+
+
+
+
+# Crime 3
 
 ```{r example, eval =FALSE}
 library(vectorTools)

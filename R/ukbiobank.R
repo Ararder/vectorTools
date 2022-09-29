@@ -16,11 +16,11 @@ check_dataset <- function(variable, dataset){
 
   if(!rlang::is_empty(cols)){
 
-    output <- data.table::fread(dataset, select = append("f.eid", cols))
     print(glue::glue(
       "Found a total of {ncol(output)-1} columns using {variable} from:
       {dataset}"
     ))
+    output <- data.table::fread(dataset, select = append("f.eid", cols))
     output
   } else {
     print(glue::glue(
