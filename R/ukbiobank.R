@@ -1,4 +1,4 @@
-
+utils::globalVariables(c("temp", "x"))
 
 
 check_dataset <- function(variable, dataset){
@@ -48,6 +48,7 @@ check_ukb <- function(variable, ukb_data){
 
 
 
+
 #' Title
 #'
 #' @param variables vector or string of column names
@@ -83,3 +84,67 @@ ukb_extract <- function(variables, ukb_data){
 
 }
 
+
+
+
+derive <- function(data, code){
+  if(is.character(code)){
+    column <-
+      dplyr::filter(data, dplyr::
+                      if_any(-1, ~(stringr::str_detect(.,code)))) %>%
+      dplyr::mutate(x = 1L) %>%
+      dplyr::select(1, x)
+
+    names(column)[2] <- code
+
+  } else {
+    column <-
+      dplyr::filter(data, dplyr::if_any(2:ncol(data),  ~.x %in% all_of(code))) %>%
+      dplyr::mutate(x = 1L) %>%
+      dplyr::select(1, x)
+    names(column)[2] <- paste0("code", code)
+  }
+
+  print( paste0("For code: ", code, " found a total of ", nrow(column), " cases"))
+  column %>%
+    dplyr::mutate(temp = 1L) %>%
+    dplyr::select(1, temp) %>%
+    dplyr::tibble()
+}
+
+#' Check for one or several codes in all columns of a dataset
+#'
+#' @param codes codes to check for
+#' @param col_name name of the column to be created
+#' @param data a dataframe
+#'
+#' @return a tibble
+#' @importFrom rlang :=
+#' @export
+#'
+#' @examples \dontrun{
+#' bipolar <- check_for_code(c("F30", "F31", "bipolar", icd_data))
+#' }
+check_for_code <- function(codes, col_name, data){
+
+
+  if(length(codes) == 1){
+    derive(data, codes) %>%
+      dplyr::mutate(temp = 1L) %>%
+      dplyr::select(1, {{ col_name }} := temp) %>%
+      tibble::tibble()
+
+  } else {
+    # Sometimes you want to merge multiple codes into "one" definition.
+    output <-
+      purrr::map(codes, derive, data = data) %>%
+      purrr::reduce(dplyr::full_join, by = "f.eid") %>%
+      dplyr::mutate(temp = 1L) %>%
+      dplyr::select(1, {{ col_name }} := temp) %>%
+      tibble::tibble()
+    print(
+      paste0("All joined together, found a total of ", nrow(output), " cases")
+    )
+    return(output)
+  }
+}

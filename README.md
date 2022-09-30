@@ -40,25 +40,40 @@ tibble(x=c(colnames(cools), c("f.20.0.0", "f.20.0.4", "f.20"))) %>%
   filter(str_detect(x, "f.20\\."))
 ```
 
-The matching against the field name only check if the provided string
-matches any of the column names. Therefore, ukb_extract(“f.32”) would
-also match any columns starting with “f.32\*
+# Extracting ICD definitions from UKB
+
+A common task is to get the list of individuals with atleast one
+instance of an ICD code. In UKB, many fields are stored in a wide
+format - you have many columns for each individual, and the code could
+by in any of these columns.
+
+For this i use check_for_code, which checks if the specified code is is
+any of the columns in the dataset provided (except column 1, which is
+assumed to be id)
 
 ``` r
 library(tidyverse)
-#> ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-#> ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
-#> ✔ tibble  3.1.8      ✔ dplyr   1.0.10
-#> ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
-#> ✔ readr   2.1.2      ✔ forcats 0.5.2 
-#> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-#> ✖ dplyr::filter() masks stats::filter()
-#> ✖ dplyr::lag()    masks stats::lag()
-ex <- tibble(string=c("f.32", "f.322", "f.3220.0.1", "f.20005.0.0"))
+library(vectorTools)
 
-filter(ex, str_detect(string, "f.32^"))
-#> # A tibble: 0 × 1
-#> # … with 1 variable: string <chr>
+# assuming you have read permission for UKB
+# list of all unique icd codes
+icd_data <- ukb_extract("f.41270")
+
+anxiety <- check_for_code(codes = "F43", col_name = "anxiety", data = icd_data)
+
+
+# many definitions, with some definitions having more than 1 possible code
+codes <- list(
+  bip =  c("F30", "F31"),
+  mdd_recur = c("F33"),
+  scz = c("F20", "F25"),
+  mdd_single = c("F32")
+)
+
+
+# Create several definitions at once, with varying number of icd codes used
+# for each definition
+cases <- map2_df(codes, names(codes), check_for_code, data = icd_codes)
 ```
 
 # Crime 3
