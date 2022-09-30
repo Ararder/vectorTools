@@ -17,7 +17,7 @@ check_dataset <- function(variable, dataset){
   if(!rlang::is_empty(cols)){
 
     print(glue::glue(
-      "Found {variable} in{dataset}"
+      "Found {length(cols)} {variable} in{dataset}"
     ))
 
     output <- data.table::fread(dataset, select = append("f.eid", cols))
