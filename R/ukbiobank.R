@@ -90,6 +90,9 @@ ukb_extract <- function(variables, ukb_data=2, remove_withdrawn=TRUE){
     r <- purrr::map_df(fs::dir_ls("/nfs/AGE/UKB/data/withdraw"), data.table::fread) %>%
       dplyr::distinct() %>%
       dplyr::rename(f.eid = 1)
+    print(glue::glue(
+      "Identified a total of {(nrow(r)} individuals that have withdrawn consent"
+    ))
     out <- dplyr::anti_join(out, r)
 
   }
