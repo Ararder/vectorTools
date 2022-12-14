@@ -28,9 +28,11 @@ install_github("ararder/vectorTools")
 ```
 
 ## UK Biobank
-On vector, phenotype for UKB is stored in three separate files. The files are
+On vector, phenotype for UKB is stored in  separate files. The files are
 very large, so it is not feasible to read the entire dataset in, and then drop the variables you dont
-want. For this, there is the ukb_extract() function, which takes as argument a vector of fields to extract.
+want. 
+
+For this, there is the ukb_extract() function, which takes as argument a vector of fields to extract.
 The function will first see if the field exists in each of the datasets, and then extract it if it exists.
 
 
@@ -39,34 +41,54 @@ library(tidyverse)
 library(vectorTools)
 library(data.table)
 
+# Extracts field f.34
+## Note the "\\. - this is to ensure an exact match
 tt <- ukb_extract("f.34\\.")
-cools <- fread("/nfs/AGE/UKB/data/180524/r/ukb22140.tab", nrows = 0)
 
-
-  
-tibble(x=c(colnames(cools), c("f.20.0.0", "f.20.0.4", "f.20"))) %>% 
-  filter(str_detect(x, "f.20$"))
-  filter(str_detect(x, "f.20\\."))
-
-
+selfrep_data <- ukb_extract("f.20002.")
+cols <- fread("/nfs/AGE/UKB/data/180524/r/ukb22140.tab", nrows = 0)
 ```
 
-# Extracting ICD definitions from UKB
-A common task is to get the list of individuals with atleast one instance of an ICD code. In UKB, many fields are stored in a wide format - you have many columns for each individual, and the code could by in any of these columns.
 
-For this i use check_for_code, which checks if the specified code is is any of the columns in the dataset provided (except column 1, which is assumed to be id)
+The matching of each character vector to the fields is with stringr::str_detect
+This means that you have to be careful if the field id can match several ideas, for example:
+```{r}
+field_to_get <- c("f.34")
+made_up_fields <- c("f.34", "f.34100", "f.314")
+
+# This also matches f.34100 !!
+stringr::str_detect(made_up_fields, "f.34")
+
+# To handle this, add in the \\. to also match the ., which correponds to end of field id-
+stringr::str_detect(made_up_fields, "f.34\\.")
+
+```
+In general, UKB field ids can be mapped to the showcase ids as following:
+field [20446](https://biobank.ndph.ox.ac.uk/showcase/field.cgi?id=20446) becomes
+f.20446.[subfield1].[subfield2]
+
+How many subfields there are will depend on each field. Generally the contain cases where
+the phenotype is measured several times per visit, and if the phenotype has been measured at more than one visit.
+
+# Extracting ICD definitions from UKB
+A common task is to get the list of individuals with atleast one instance of an ICD code.
+If you only care about whether an individual has ever been diagnosed with a disorder, the field to use is
+[41270](https://biobank.ndph.ox.ac.uk/showcase/field.cgi?id=41270)
+
+In UKB, many fields are stored in a wide format - you have many columns for each individual, and the code could by in any of these columns. For this i use check_for_code, which checks if the specified code is is any of the columns in the dataset provided (except column 1, which is assumed to be id)
 ```{r, eval = FALSE}
 library(tidyverse)
 library(vectorTools)
 
 # assuming you have read permission for UKB
 # list of all unique icd codes
-icd_data <- ukb_extract("f.41270")
 
+# first we extract f.41270, then extract all individuals with F43
+icd_data <- ukb_extract("f.41270")
 anxiety <- check_for_code(codes = "F43", col_name = "anxiety", data = icd_data)
 
-
-# many definitions, with some definitions having more than 1 possible code
+# check_for_code can easily be extended to several groups, and if you want to use
+# multiple ICD codes to define a single disorder
 codes <- list(
   bip =  c("F30", "F31"),
   mdd_recur = c("F33"),
@@ -74,12 +96,27 @@ codes <- list(
   mdd_single = c("F32")
 )
 
-
-# Create several definitions at once, with varying number of icd codes used
-# for each definition
 cases <- map2_df(codes, names(codes), check_for_code, data = icd_codes)
 ```
 
+# Extracting selfreported definitions from UKB
+Since datafield 20002 - (selfreported diagnosis) follows the same long format 
+as 41270, we can easily extend the above code for selfreported codes
+```{r, eval=FALSE}
+
+selfrep_data <- ukb_extract("f.41270")
+
+# 1287 corresponds to the selfrep code for anxiety in field 20002
+anxiety <- check_for_code(codes = "1287", col_name = "anxiety", data = selfrep_data)
+
+codes <- list(
+  anxiety_panic_attacks = c("1287"),
+  nervous_breakdown = c("1288"),
+  mig_or_epilipsy = c("1290",	"1265")
+)
+
+cases <- map2_df(codes, names(codes), check_for_code, data = selfrep_data)
+```
 
 # Crime 3
 

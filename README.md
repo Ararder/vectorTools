@@ -30,7 +30,7 @@ library(tidyverse)
 library(vectorTools)
 library(data.table)
 
-tt <- ukb_extract("f.34\\.")
+tt <- ukb_extract("f.20446")
 cools <- fread("/nfs/AGE/UKB/data/180524/r/ukb22140.tab", nrows = 0)
 
 
