@@ -14,12 +14,16 @@ Imports:
     DBI,
     dbplyr,
     dplyr,
+    fs,
+    glue,
     lubridate,
     magrittr,
     odbc,
     purrr,
     rlang,
     stringr,
+    tibble,
+    tidyr,
     utils
 Suggests: 
     testthat (>= 3.0.0)

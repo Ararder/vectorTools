@@ -1,4 +1,4 @@
-utils::globalVariables(c("temp", "x"))
+utils::globalVariables(c("temp", "x", ":="))
 
 
 check_dataset <- function(variable, dataset){
@@ -119,7 +119,6 @@ derive <- function(data, code){
 #' @param data a dataframe
 #'
 #' @return a tibble
-#' @importFrom rlang :=
 #' @export
 #'
 #' @examples \dontrun{
