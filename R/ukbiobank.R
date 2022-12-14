@@ -89,7 +89,7 @@ ukb_extract <- function(variables, ukb_data=2, remove_withdrawn=TRUE){
   if(remove_withdrawn){
     r <- purrr::map_df(fs::dir_ls("/nfs/AGE/UKB/data/withdraw"), data.table::fread) %>%
       dplyr::distinct() %>%
-      rename(f.eid = 1)
+      dplyr::rename(f.eid = 1)
     out <- dplyr::anti_join(out, r)
 
   }
