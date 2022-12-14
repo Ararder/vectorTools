@@ -4,12 +4,14 @@
 \alias{ukb_extract}
 \title{Title}
 \usage{
-ukb_extract(variables, ukb_data)
+ukb_extract(variables, ukb_data = 2, remove_withdrawn = TRUE)
 }
 \arguments{
 \item{variables}{vector or string of column names}
 
 \item{ukb_data}{list of filepaths for the UKB data files}
+
+\item{remove_withdrawn}{Remove participants that has withdrawn their consent?}
 }
 \value{
 a tibble of the the datafields extracted

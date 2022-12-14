@@ -53,6 +53,7 @@ check_ukb <- function(variable, ukb_data){
 #'
 #' @param variables vector or string of column names
 #' @param ukb_data list of filepaths for the UKB data files
+#' @param remove_withdrawn Remove participants that has withdrawn their consent?
 #'
 #' @return a tibble of the the datafields extracted
 #' @export
@@ -60,27 +61,39 @@ check_ukb <- function(variable, ukb_data){
 #' @examples \dontrun{
 #' df <- ukb_extract(c("20002", "41270"))
 #' }
-ukb_extract <- function(variables, ukb_data){
+ukb_extract <- function(variables, ukb_data=2, remove_withdrawn=TRUE){
 
   # set default filepaths for UKB on vector
-  if(missing(ukb_data)) {
+  stopifnot(ukb_data ==1 | ukb_data==2)
+  if(ukb_data == 1) {
+    # most fields are here
     ukb_data <- list("/nfs/AGE/UKB/data/211014/r/ukb48847.tab",
                      "/nfs/AGE/UKB/data/211019/r/ukb48978.tab",
                      "/nfs/AGE/UKB/data/180524/r/ukb22140.tab")
-  } else {
+  } else if(ukb_data == 2) {
     print("Examining all datasets ending in '*.tab' in UKB folder")
     ukb_data <- fs::dir_ls("/nfs/AGE/UKB/data/", glob = "*.tab", recurse=TRUE)
   }
 
 
+
   # if inputting multiple variables, iterate over each.
   if(length( {{ variables }} ) <= 1 ){
-    check_ukb( {{ variables }}, {{ ukb_data }} ) %>% dplyr::tibble()
+    out <- check_ukb( {{ variables }}, {{ ukb_data }} ) %>% dplyr::tibble()
 
   } else{
-    purrr::map( {{ variables }} , check_ukb, ukb_data = {{ ukb_data }}) %>%
+    out <- purrr::map( {{ variables }} , check_ukb, ukb_data = {{ ukb_data }}) %>%
       purrr::reduce(dplyr::full_join, by = "f.eid") %>% dplyr::tibble()
   }
+
+  if(remove_withdrawn){
+    r <- purrr::map_df(fs::dir_ls("/nfs/AGE/UKB/data/withdraw"), data.table::fread) %>%
+      dplyr::distinct()
+    out <- dplyr::anti_join(out, r)
+
+  }
+
+  out
 
 }
 

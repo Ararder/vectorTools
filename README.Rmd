@@ -87,6 +87,9 @@ library(vectorTools)
 icd_data <- ukb_extract("f.41270")
 anxiety <- check_for_code(codes = "F43", col_name = "anxiety", data = icd_data)
 
+# What if we want anxiety AND mdd? - wrap multiple icd with c(code1, code2)
+mdd_anx <- check_for_code(codes = c("F32","F43"), col_name = "anx_mdd", data = icd_data)
+
 # check_for_code can easily be extended to several groups, and if you want to use
 # multiple ICD codes to define a single disorder
 codes <- list(
