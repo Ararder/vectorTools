@@ -89,8 +89,14 @@ library(vectorTools)
 icd_data <- ukb_extract("f.41270")
 anxiety <- check_for_code(codes = "F43", col_name = "anxiety", data = icd_data)
 
-# check_for_code can easily be extended to several groups, and if you want to use
-# multiple ICD codes to define a single disorder
+# What if we want anxiety AND mdd? - wrap multiple icd with c(code1, code2)
+mdd_anx <- check_for_code(codes = c("F32","F43"), col_name = "anx_mdd", data = icd_data)
+
+# note that the function CANNOT be extended as follow, ie also giving col_name a vector of names
+# mdd_anx <- check_for_code(codes = c("F32","F43"), col_name = c("anx", "mdd"), data = icd_data)
+
+# If you want to define several disorders, each with different codes:
+# we extend it using map2_df
 codes <- list(
   bip =  c("F30", "F31"),
   mdd_recur = c("F33"),
@@ -107,8 +113,10 @@ Since datafield 20002 - (selfreported diagnosis) follows the same long
 format as 41270, we can easily extend the above code for selfreported
 codes
 
-``` r
+By default, ukb_extract removes individuals whom have withdrawn their
+consnet
 
+``` r
 selfrep_data <- ukb_extract("f.41270")
 
 # 1287 corresponds to the selfrep code for anxiety in field 20002
