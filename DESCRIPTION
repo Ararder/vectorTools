@@ -1,9 +1,9 @@
 Package: vectorTools
-Title: What the Package Does (One Line, Title Case)
+Title: Work with data on Vector at MEB
 Version: 0.0.0.9000
 Authors@R: 
     person("Arvid", "Harder", , "arvid.harder@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0002-5984-9207"))
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8
