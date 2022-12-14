@@ -105,8 +105,9 @@ cases <- map2_df(codes, names(codes), check_for_code, data = icd_codes)
 # Extracting selfreported definitions from UKB
 Since datafield 20002 - (selfreported diagnosis) follows the same long format 
 as 41270, we can easily extend the above code for selfreported codes
-```{r, eval=FALSE}
 
+By default, ukb_extract removes individuals whom have withdrawn their consnet
+```{r, eval=FALSE}
 selfrep_data <- ukb_extract("f.41270")
 
 # 1287 corresponds to the selfrep code for anxiety in field 20002
