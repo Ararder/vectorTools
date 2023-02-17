@@ -153,3 +153,37 @@ scz_first_dia_sub <- crime3_first_unique_diagnosis(scz_dia, icd_digits = 4)
 ```
 
 
+# Psych4
+Tips and tricks for using psych4:
+
+```{r, eval = FALSE}
+# Always name the object con. Other psych4 functions will assume this object exists
+con <- psych4_con()
+```
+
+Extract tables from psych4 by providing the table name as a string.
+
+```{r, eval = FALSE}
+psych4("V_NPR_DIA") |> 
+  head()
+
+# calling psych 4 without any arguments will print all tables starting with V_*
+# ie, tables that have relevant data.
+psych4() 
+```
+
+
+```{r, eval = FALSE}
+# to match strings, use %like% 
+psych4("V_NPR_DIA") |> 
+  filter("DIA" %like = "F32%")
+```
+
+
+```{r, eval = FALSE}
+my_ids <- dplyr::tibble(LOPNR = c(100,1001, 100231))
+psych4("V_NPR_DIA") |> 
+  # to use data from your local machine, use copy=TRUE
+  semi_join(my_ids, by = "LOPNR", copy=TRUE)
+```
+
