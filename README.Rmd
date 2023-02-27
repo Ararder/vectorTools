@@ -51,7 +51,7 @@ cols <- fread("/nfs/AGE/UKB/data/180524/r/ukb22140.tab", nrows = 0)
 
 
 The matching of each character vector to the fields is with stringr::str_detect
-This means that you have to be careful if the field id can match several ideas, for example:
+This means that you have to be careful if the field ID can match several fields.
 ```{r}
 field_to_get <- c("f.34")
 made_up_fields <- c("f.34", "f.34100", "f.314")
