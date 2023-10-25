@@ -61,20 +61,15 @@ check_ukb <- function(variable, ukb_data){
 #' @examples \dontrun{
 #' df <- ukb_extract(c("20002", "41270"))
 #' }
-ukb_extract <- function(variables, ukb_data=2, remove_withdrawn=TRUE){
+ukb_extract <- function(variables, ukb_data, remove_withdrawn=TRUE){
 
-  # set default filepaths for UKB on vector
-  stopifnot(ukb_data ==1 | ukb_data==2)
-  if(ukb_data == 1) {
-    # most fields are here
-    ukb_data <- list("/nfs/AGE/UKB/data/211014/r/ukb48847.tab",
-                     "/nfs/AGE/UKB/data/211019/r/ukb48978.tab",
-                     "/nfs/AGE/UKB/data/180524/r/ukb22140.tab")
-  } else if(ukb_data == 2) {
+
+  if(rlang::is_missing(ukb_data)) {
     print("Examining all datasets ending in '*.tab' in UKB folder")
     ukb_data <- fs::dir_ls("/nfs/AGE/UKB/data/", glob = "*.tab", recurse=TRUE)
+  } else {
+    stopifnot("The file specified in ukb_data does not exist" = file.exists(ukb_data))
   }
-
 
 
   # if inputting multiple variables, iterate over each.

@@ -4,7 +4,7 @@
 \alias{ukb_extract}
 \title{Title}
 \usage{
-ukb_extract(variables, ukb_data = 2, remove_withdrawn = TRUE)
+ukb_extract(variables, ukb_data, remove_withdrawn = TRUE)
 }
 \arguments{
 \item{variables}{vector or string of column names}
