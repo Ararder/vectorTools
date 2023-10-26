@@ -2,14 +2,14 @@
 % Please edit documentation in R/ukbiobank.R
 \name{ukb_extract}
 \alias{ukb_extract}
-\title{Title}
+\title{Extract a set of fields for UKBB data on Vector}
 \usage{
 ukb_extract(variables, ukb_data, remove_withdrawn = TRUE)
 }
 \arguments{
-\item{variables}{vector or string of column names}
+\item{variables}{Character vector of field names}
 
-\item{ukb_data}{list of filepaths for the UKB data files}
+\item{ukb_data}{Path to UKBB data. If not passed will scan all dataframes in the UKBB folder}
 
 \item{remove_withdrawn}{Remove participants that has withdrawn their consent?}
 }
@@ -17,7 +17,7 @@ ukb_extract(variables, ukb_data, remove_withdrawn = TRUE)
 a tibble of the the datafields extracted
 }
 \description{
-Title
+Extract a set of fields for UKBB data on Vector
 }
 \examples{
 \dontrun{

@@ -1,58 +1,10 @@
 utils::globalVariables(c("temp", "x", ":="))
 
 
-check_dataset <- function(variable, dataset){
-  ## Given a dataset filepath and a colname string, check if the variable exists as a column,
-  ## and if it exists, fread it.
-
-  # Can only do for one code at a time.
-  stopifnot(length(variable) == 1)
-
-  # Read in column names
-  dataset_columns <- data.table::fread(dataset, nrows = 0) %>% colnames()
-
-  # extract overlap
-  cols <- dataset_columns[stringr::str_detect(dataset_columns,variable)]
-
-  if(!rlang::is_empty(cols)){
-
-    print(glue::glue(
-      "Found {length(cols)} {variable} in{dataset}"
-    ))
-
-    output <- data.table::fread(dataset, select = append("f.eid", cols))
-    print(glue::glue(
-      "Found a total of {ncol(output)-1} columns using {variable} from:
-      {dataset}"
-    ))
-    output
-  } else {
-    print(glue::glue(
-      "Found no columns in
-      {dataset}
-      "))
-    return(NULL)
-  }
-
-}
-
-
-check_ukb <- function(variable, ukb_data){
-
-  purrr::map({{ ukb_data }} , variable = {{ variable }}, check_dataset) %>%
-    # remove empty list entries
-    purrr::compact() %>%
-    purrr::reduce(dplyr::full_join, by = "f.eid")
-
-}
-
-
-
-
-#' Title
+#' Extract a set of fields for UKBB data on Vector
 #'
-#' @param variables vector or string of column names
-#' @param ukb_data list of filepaths for the UKB data files
+#' @param variables Character vector of field names
+#' @param ukb_data Path to UKBB data. If not passed will scan all dataframes in the UKBB folder
 #' @param remove_withdrawn Remove participants that has withdrawn their consent?
 #'
 #' @return a tibble of the the datafields extracted
@@ -65,21 +17,20 @@ ukb_extract <- function(variables, ukb_data, remove_withdrawn=TRUE){
 
 
   if(rlang::is_missing(ukb_data)) {
-    print("Examining all datasets ending in '*.tab' in UKB folder")
+    cli::cli_alert_info("No filepath was passed in {.var dataset}")
+    cli::cli_inform("Examining all datasets ending in '*.tab' in {.path /nfs/AGE/UKB/data/}")
     ukb_data <- fs::dir_ls("/nfs/AGE/UKB/data/", glob = "*.tab", recurse=TRUE)
   } else {
+    cli::cli_alert_info("Attempting to check data from {.file {ukb_data}}")
     stopifnot("The file specified in ukb_data does not exist" = file.exists(ukb_data))
   }
 
 
   # if inputting multiple variables, iterate over each.
-  if(length( {{ variables }} ) <= 1 ){
-    out <- check_ukb( {{ variables }}, {{ ukb_data }} ) %>% dplyr::tibble()
-
-  } else{
-    out <- purrr::map( {{ variables }} , check_ukb, ukb_data = {{ ukb_data }}) %>%
-      purrr::reduce(dplyr::full_join, by = "f.eid") %>% dplyr::tibble()
-  }
+  out <-
+    purrr::map(variables, \(var) check_ukb(variable = var, ukb_data = ukb_data)) |>
+    purrr::reduce(dplyr::full_join, by = "f.eid") |>
+    dplyr::tibble()
 
   if(remove_withdrawn){
     r <- purrr::map_df(fs::dir_ls("/nfs/AGE/UKB/data/withdraw"), data.table::fread) %>%
@@ -95,6 +46,49 @@ ukb_extract <- function(variables, ukb_data, remove_withdrawn=TRUE){
   out
 
 }
+
+check_ukb <- function(variable, ukb_data){
+  # iterate over all ukb datasets
+  purrr::map(ukb_data, \(data) check_dataset(dataset = data, variable = variable)) |>
+    # remove empty list entries
+    purrr::compact() |>
+    purrr::reduce(dplyr::full_join, by = "f.eid")
+
+}
+
+check_dataset <- function(variable, dataset) {
+  # Given a filepath and a colname string, check if the variable exists as a column
+
+  # Can only do for one code at a time.
+  stopifnot(length(variable) == 1)
+
+  # Read in column names
+  dataset_columns <- colnames(data.table::fread(dataset, nrows = 0))
+
+  # extract overlap
+  cols <- dataset_columns[stringr::str_detect(dataset_columns,variable)]
+
+  if(rlang::is_empty(cols)) {
+
+    cli::cli_alert("No columns matched {.field {variable}} in {.file {dataset}}")
+    return(NULL)
+
+  } else {
+    cli::cli_alert_success("Found {length(cols)} columns matching {.field {variable}} in {.file {dataset}}")
+    cli::cli_alert_info("Matching columns: {.field {cols}}")
+    readr::read_tsv(dataset, col_select = append("f.eid", cols), show_col_types = FALSE)
+
+  }
+
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -158,4 +152,39 @@ check_for_code <- function(codes, col_name, data){
     )
     return(output)
   }
+}
+
+
+
+scan_ukb <- function(variable, dataset) {
+  # Can only do for one code at a time.
+  stopifnot("Can only check one variable at a time" = length(variable) == 1)
+  if(rlang::is_missing(dataset)) {
+    ukb_data <- fs::dir_ls("/nfs/AGE/UKB/data/", glob = "*.tab", recurse=TRUE)
+    cli::cli_alert_info("No filepath was passed in {.var dataset}")
+    cli::cli_inform("Examining all datasets ending in '*.tab' in {.path /nfs/AGE/UKB/data/}")
+  }
+
+  # Read in column names
+  dataset_columns <- data.table::fread(dataset, nrows = 0) |>
+    colnames()
+
+  # extract overlap
+  cols <- dataset_columns[stringr::str_detect(dataset_columns,variable)]
+
+
+  if(rlang::is_empty(cols)) {
+
+    cli::cli_alert("No columns found for {variable} in {dataset}")
+    return(NULL)
+
+  } else {
+
+    cli::cli_alert_success("Found {length(cols)} columns matching {variable} in {dataset}")
+    return()
+
+  }
+
+
+
 }
