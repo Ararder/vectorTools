@@ -93,66 +93,54 @@ check_dataset <- function(variable, dataset) {
 
 
 
-derive <- function(data, code){
-  if(is.character(code)){
-    column <-
-      dplyr::filter(data, dplyr::
-                      if_any(-1, ~(stringr::str_detect(.,code)))) %>%
-      dplyr::mutate(x = 1L) %>%
-      dplyr::select(1, x)
-
-    names(column)[2] <- code
-
-  } else {
-    column <-
-      dplyr::filter(data, dplyr::if_any(2:ncol(data),  ~.x %in% all_of(code))) %>%
-      dplyr::mutate(x = 1L) %>%
-      dplyr::select(1, x)
-    names(column)[2] <- paste0("code", code)
-  }
-
-  print( paste0("For code: ", code, " found a total of ", nrow(column), " cases"))
-  column %>%
-    dplyr::mutate(temp = 1L) %>%
-    dplyr::select(1, temp) %>%
-    dplyr::tibble()
-}
 
 #' Check for one or several codes in all columns of a dataset
 #'
-#' @param codes codes to check for
-#' @param col_name name of the column to be created
-#' @param data a dataframe
+#' @param codes a vector of codes, either character or numeric.
+#' @param col_name Should all individuals meeting the criteria be marked with 1 in a column?
+#' @param data the UKB data, read into memory with [ukb_extract()]
 #'
-#' @return a tibble
+#' @return a [dplyr::tibble()]
 #' @export
 #'
 #' @examples \dontrun{
 #' bipolar <- check_for_code(c("F30", "F31", "bipolar", icd_data))
 #' }
 check_for_code <- function(codes, col_name, data){
+  if(!rlang::is_missing(col_name)) {
+    cli::cli_inform("{.emph {col_name}} was provided as a column name. This means that all rows with
+                      {codes} will be marked with 1 in the column {.emph {col_name}}")
 
-
-  if(length(codes) == 1){
-    derive(data, codes) %>%
-      dplyr::mutate(temp = 1L) %>%
-      dplyr::select(1, {{ col_name }} := temp) %>%
-      tibble::tibble()
-
-  } else {
-    # Sometimes you want to merge multiple codes into "one" definition.
-    output <-
-      purrr::map(codes, derive, data = data) %>%
-      purrr::reduce(dplyr::full_join, by = "f.eid") %>%
-      dplyr::mutate(temp = 1L) %>%
-      dplyr::select(1, {{ col_name }} := temp) %>%
-      tibble::tibble()
-    print(
-      paste0("All joined together, found a total of ", nrow(output), " cases")
-    )
-    return(output)
+    cli::cli_alert_info("You can retain information on each subcode by not passing a value to {.var col_name}")
   }
+
+
+  output <-
+    purrr::map(codes, \(x) derive(code = x, data = data )) |>
+    purrr::reduce(dplyr::full_join, by = "f.eid")
+
+
+  if(!rlang::is_missing(col_name)) {
+    output <- dplyr::select(output,1 ) |>
+      dplyr::mutate({{ col_name }} := 1L)
+  }
+
+  output
 }
+
+derive <- function(code, data) {
+
+
+  if(is.character(code)) ids <- dplyr::filter(data, dplyr::if_any(-1, \(x) stringr::str_detect(x,code)))
+  if(is.numeric(code)) ids <- dplyr::filter(data, dplyr::if_any(-1,  \(x) x %in% all_of(code)))
+
+  cli::cli_alert_success("Found {nrow(ids)} individuals with code {.emph {code}}")
+
+  colname <- paste0("c.", code)
+  dplyr::select(ids, 1) |>
+    dplyr::mutate({{ colname }} := 1L)
+}
+
 
 
 

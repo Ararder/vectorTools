@@ -7,14 +7,14 @@
 check_for_code(codes, col_name, data)
 }
 \arguments{
-\item{codes}{codes to check for}
+\item{codes}{a vector of codes, either character or numeric.}
 
-\item{col_name}{name of the column to be created}
+\item{col_name}{Should all individuals meeting the criteria be marked with 1 in a column?}
 
-\item{data}{a dataframe}
+\item{data}{the UKB data, read into memory with \code{\link[=ukb_extract]{ukb_extract()}}}
 }
 \value{
-a tibble
+a \code{\link[dplyr:reexports]{dplyr::tibble()}}
 }
 \description{
 Check for one or several codes in all columns of a dataset
