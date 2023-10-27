@@ -76,7 +76,7 @@ check_dataset <- function(variable, dataset) {
   } else {
     cli::cli_alert_success("Found {length(cols)} columns matching {.field {variable}} in {.file {dataset}}")
     cli::cli_alert_info("Matching columns: {.field {cols}}")
-    readr::read_tsv(dataset, col_select = append("f.eid", cols), show_col_types = FALSE)
+    data.table::fread(dataset, select = c("f.eid", cols))
 
   }
 
